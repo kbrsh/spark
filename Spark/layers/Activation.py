@@ -21,4 +21,4 @@ class Activation(object):
         return o
 
     def backward(self, dY):
-        return self.activationPrime(self.o)
+        return np.multiply(dY, self.activationPrime(self.o))

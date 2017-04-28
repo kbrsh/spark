@@ -35,11 +35,11 @@ class Spark(object):
             loss += lastLayer.loss(lastInput, y)
 
             dY = lastLayer.lossPrime(lastInput, y)
-            for l in reversed(xrange(len(self.layers))):
-                dY = self.layers[l].backward(dY)
+            for layer in reversed(self.layers):
+                dY = layer.backward(dY)
 
             print 'Epoch: ' + str(epoch)
-            print 'Loss: ' + str(np.mean(loss))
+            print 'Loss: {0:.20f}'.format(np.mean(loss))
             print ''
 
 

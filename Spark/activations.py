@@ -14,12 +14,21 @@ def sigmoid(x):
 def sigmoidPrime(x):
     return np.exp(-x) / ((1 + np.exp(-x)) ** 2)
 
-# Sigmoid Activations
+# Tanh Activations
 def tanh(x):
     return np.tanh(x)
 
 def tanhPrime(x):
     return 1 / (np.cosh(x)**2)
+
+# ReLu Activations
+def relu(x):
+    return x * (x > 0)
+
+def reluPrime(x):
+    y = np.copy(x)
+    y[x <= 0] = 0
+    return y
 
 # Global Activations Dictionary
 activations = globals()
