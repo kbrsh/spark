@@ -25,9 +25,7 @@ class Spark(object):
     def build(self, learningRate=1e-2, loss='meanSquared'):
         a, b = losses.get(loss)
         self.loss, self.lossPrime = losses.get(loss)
-
-        for layer in self.layers:
-            layer.learningRate = learningRate
+        self.learningRate = learningRate
 
     def run(self, epochs=10):
         inputs = self.X
@@ -51,6 +49,7 @@ class Spark(object):
             # Backward Propagate Layers
             dY = self.lossPrime(lastInput, y)
             gradients = []
+
             for layer in reversed(self.layers):
                 dY, grad = layer.backward(dY)
                 gradients.append(grad)
@@ -61,7 +60,7 @@ class Spark(object):
                 for param, m, v, delta in zip(params, ms, vs, grad):
                     m = 0.9 * m + 0.1 * delta
                     v = 0.99 * v + 0.01 * (delta ** 2)
-                    param += -layer.learningRate * m / (np.sqrt(v) + 1e-8)
+                    param += -self.learningRate * m / (np.sqrt(v) + 1e-8)
 
 
 

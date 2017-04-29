@@ -5,9 +5,6 @@ import numpy as np
 
 class Dense(Layer.Layer):
     def __init__(self, inputSize, outputSize, activation=None):
-        # Learning Rate
-        self.learningRate = 0
-
         # Input/Output Size
         self.inputSize = inputSize
         self.outputSize = outputSize
@@ -29,16 +26,24 @@ class Dense(Layer.Layer):
         self.activation, self.activationPrime = activations.get(activation)
 
     def forward(self, X):
-        o = self.activation(np.dot(X, self.WH) + self.bh)
         self.X = X
-        self.o = o
-        return o
+        self.o = self.activation(np.dot(X, self.WH) + self.bh)
+        return self.o
 
-    def backward(self, dY):
-        dbh = np.sum(dY)
-        dY = np.multiply(dY, self.activationPrime(self.o))
+    def backward(self, dO):
+        # Back Propagate into Dot Product
+        dY = np.multiply(dO, self.activationPrime(self.o))
+
+        # Back Propagate into Bias
+        dbh = np.sum(dO)
+
+        # Back Propagate into Weights
         dW = np.dot(self.X.T, dY)
-        return dY, [dW, dbh]
+
+        # Back Propagate into Inputs
+        dX = np.dot(dY, self.WH.T)
+
+        return dX, [dW, dbh]
 
     def getParams(self):
         return [self.WH, self.bh], [self.WHm, self.bhm], [self.WHv, self.bhv]

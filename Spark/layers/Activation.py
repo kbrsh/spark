@@ -9,9 +9,8 @@ class Activation(Layer.Layer):
         self.activation, self.activationPrime = activations.get(name)
 
     def forward(self, X):
-        o = self.activation(X)
-        self.o = o
-        return o
+        self.o = self.activation(X)
+        return self.o
 
-    def backward(self, dY):
-        return np.multiply(dY, self.activationPrime(self.o)), []
+    def backward(self, dO):
+        return np.multiply(dO, self.activationPrime(self.o)), []
