@@ -1,20 +1,19 @@
-from __future__ import absolute_import
-
+from . import Layer
 from .. import activations
 
 import numpy as np
 
-class Dense(object):
-    def __init__(self, inputSize, outputSize, activation=None, learningRate=1e-2):
+class Dense(Layer.Layer):
+    def __init__(self, inputSize, outputSize, activation=None):
         # Learning Rate
-        self.learningRate = learningRate
+        self.learningRate = 0
 
         # Input/Output Size
         self.inputSize = inputSize
         self.outputSize = outputSize
 
         # Generate Weights
-        self.WH = np.random.randn(self.inputSize, self.outputSize)
+        self.WH = np.random.randn(self.inputSize, self.outputSize) * 0.1
 
         # Generate Biases
         self.bh = np.zeros(self.outputSize)
@@ -28,12 +27,6 @@ class Dense(object):
 
         # Setup Activation Function
         self.activation, self.activationPrime = activations.get(activation)
-
-    def loss(self, o, y):
-        return np.mean(np.square(o - y), axis=-1)
-
-    def lossPrime(self, o, y):
-        return o - y
 
     def forward(self, X):
         o = self.activation(np.dot(X, self.WH) + self.bh)

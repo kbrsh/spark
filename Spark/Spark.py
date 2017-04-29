@@ -1,9 +1,14 @@
 import numpy as np
+from . import losses
 
 class Spark(object):
     def __init__(self):
         # Layers
         self.layers = []
+
+        # Loss
+        self.loss = None
+        self.lossPrime = None
 
     def add(self, layer):
         self.layers.append(layer)
@@ -16,6 +21,13 @@ class Spark(object):
         # Setup outputs
         self.outputSize = y[0].shape[0]
         self.y = y
+
+    def build(self, learningRate=1e-2, loss='meanSquared'):
+        a, b = losses.get(loss)
+        self.loss, self.lossPrime = losses.get(loss)
+
+        for layer in self.layers:
+            layer.learningRate = learningRate
 
     def run(self, epochs=10):
         inputs = self.X
@@ -32,9 +44,9 @@ class Spark(object):
             for layer in self.layers:
                 lastInput = layer.forward(lastInput)
 
-            loss += lastLayer.loss(lastInput, y)
+            loss += self.loss(lastInput, y)
 
-            dY = lastLayer.lossPrime(lastInput, y)
+            dY = self.lossPrime(lastInput, y)
             for layer in reversed(self.layers):
                 dY = layer.backward(dY)
 

@@ -1,19 +1,12 @@
-from __future__ import absolute_import
-
+from . import Layer
 from .. import activations
 
 import numpy as np
 
-class Activation(object):
+class Activation(Layer.Layer):
     def __init__(self, name):
         # Setup Activation Function
         self.activation, self.activationPrime = activations.get(name)
-
-    def loss(self, o, y):
-        return np.mean(np.square(o - y), axis=-1)
-
-    def lossPrime(self, o, y):
-        return o - y
 
     def forward(self, X):
         o = self.activation(X)
