@@ -4,3 +4,6 @@ class Layer(object):
 
     def backward(self, dY):
         pass
+
+    def getParams(self):
+        return [], [], []

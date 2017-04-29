@@ -14,4 +14,4 @@ class Activation(Layer.Layer):
         return o
 
     def backward(self, dY):
-        return np.multiply(dY, self.activationPrime(self.o))
+        return np.multiply(dY, self.activationPrime(self.o)), []

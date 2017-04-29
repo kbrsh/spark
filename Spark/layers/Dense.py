@@ -38,8 +38,7 @@ class Dense(Layer.Layer):
         dbh = np.sum(dY)
         dY = np.multiply(dY, self.activationPrime(self.o))
         dW = np.dot(self.X.T, dY)
-        for param, m, v, delta in zip([self.WH, self.bh], [self.WHm, self.bhm], [self.WHv, self.bhv], [dW, dbh]):
-            m = 0.9 * m + 0.1 * delta
-            v = 0.99 * v + 0.01 * (delta ** 2)
-            param += -self.learningRate * m / (np.sqrt(v) + 1e-8)
-        return dY
+        return dY, [dW, dbh]
+
+    def getParams(self):
+        return [self.WH, self.bh], [self.WHm, self.bhm], [self.WHv, self.bhv]

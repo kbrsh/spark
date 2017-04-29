@@ -41,14 +41,29 @@ class Spark(object):
             lastInput = inputs
             y = outputs
 
+            # Forward Propagate Layers
             for layer in self.layers:
                 lastInput = layer.forward(lastInput)
 
+            # Obtain Loss
             loss += self.loss(lastInput, y)
 
+            # Backward Propagate Layers
             dY = self.lossPrime(lastInput, y)
+            gradients = []
             for layer in reversed(self.layers):
-                dY = layer.backward(dY)
+                dY, grad = layer.backward(dY)
+                gradients.append(grad)
+
+            # Perform Parameter Update
+            for layer, grad in zip(reversed(self.layers), gradients):
+                params, ms, vs = layer.getParams()
+                for param, m, v, delta in zip(params, ms, vs, grad):
+                    m = 0.9 * m + 0.1 * delta
+                    v = 0.99 * v + 0.01 * (delta ** 2)
+                    param += -layer.learningRate * m / (np.sqrt(v) + 1e-8)
+
+
 
             print 'Epoch: ' + str(epoch)
             print 'Loss: {0:.20f}'.format(np.mean(loss))
