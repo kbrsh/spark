@@ -30,6 +30,14 @@ def reluPrime(x):
     y[x <= 0] = 0
     return y
 
+# Softmax Activations
+def softmax(x):
+    exp = np.exp(x)
+    return exp / np.sum(exp)
+
+def softmaxPrime(x):
+    return x
+
 # Global Activations Dictionary
 activations = globals()
 
