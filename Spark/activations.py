@@ -32,11 +32,11 @@ def reluPrime(x):
 
 # Softmax Activations
 def softmax(x):
-    exp = np.exp(x)
-    return exp / np.sum(exp)
+    exp = np.exp(x - np.max(x))
+    return exp / np.sum(exp, axis=1, keepdims=True)
 
 def softmaxPrime(x):
-    return x
+    return x / x.shape[0]
 
 # Global Activations Dictionary
 activations = globals()

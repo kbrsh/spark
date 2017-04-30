@@ -65,7 +65,9 @@ class Spark(object):
 
 
             print 'Epoch: ' + str(epoch)
-            print 'Loss: {0:.20f}'.format(np.mean(loss))
+            l = np.mean(loss)
+            assert l == l
+            print 'Loss: {0:.20f}'.format(l)
             print ''
 
 

@@ -12,7 +12,9 @@ def crossEntropy(o, y):
     return -np.log(o[range(o.shape[0]), np.argmax(y, axis=1)])
 
 def crossEntropyPrime(o, y):
-    return (o - y) / o.shape[0]
+    do = np.copy(o)
+    do[range(o.shape[0]), np.argmax(y, axis=1)] -= 1
+    return do
 
 # Global Loss Dictionary
 losses = globals()

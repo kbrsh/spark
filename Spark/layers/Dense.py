@@ -13,7 +13,7 @@ class Dense(Layer.Layer):
         self.WH = np.random.randn(self.inputSize, self.outputSize) * 0.1
 
         # Generate Biases
-        self.bh = np.zeros(self.outputSize)
+        self.bh = np.zeros((1, self.outputSize))
 
         # Cache for Adam Optimizer
         self.WHm = np.zeros_like(self.WH)
@@ -35,7 +35,7 @@ class Dense(Layer.Layer):
         dY = np.multiply(dO, self.activationPrime(self.o))
 
         # Back Propagate into Bias
-        dbh = np.sum(dO)
+        dbh = np.sum(dO, axis=0, keepdims=True)
 
         # Back Propagate into Weights
         dW = np.dot(self.X.T, dY)
