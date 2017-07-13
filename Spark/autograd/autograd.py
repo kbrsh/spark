@@ -32,6 +32,17 @@ class AGNode(object):
 
             return node
 
+    def __mul__(self, item):
+        if type(item) is int:
+            node = AGNode("Output", 0)
+            operation = MultiplyConstant([self, item])
+            node.operation = operation
+            node.value = operation.compute()
+
+            self.parents.append(node)
+
+            return node
+
     def toGraph(self, name=None, level=0):
         if name == None:
             name = self.name
@@ -81,6 +92,18 @@ class AddNode(object):
 
     def gradient(self):
         return 1
+
+class MultiplyConstant(object):
+    def __init__(self, inputs):
+        self.inputs = inputs
+        self.base = inputs[0]
+        self.constant = inputs[1]
+
+    def compute(self):
+        return self.base.value * self.constant
+
+    def gradient(self):
+        return self.constant
 
 def variable(name, value):
     node = AGNode(name, value)
