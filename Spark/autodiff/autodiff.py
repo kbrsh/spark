@@ -43,6 +43,17 @@ class AGNode(object):
 
             return node
 
+        elif type(item) is AGNode:
+            node = AGNode("Output", 0)
+            operation = MultiplyNode([self, item])
+            node.operation = operation
+            node.value = operation.compute()
+
+            self.parents.append(node)
+            item.parents.append(node)
+
+            return node
+
     def toGraph(self, name=None, level=0):
         if name == None:
             name = self.name
@@ -66,7 +77,7 @@ class DefaultOperation(object):
     def compute(self):
         return self.input
 
-    def gradient(self):
+    def gradient(self, node):
         return None
 
 class AddConstant(object):
@@ -78,7 +89,7 @@ class AddConstant(object):
     def compute(self):
         return self.base.value + self.constant
 
-    def gradient(self):
+    def gradient(self, node):
         return 1
 
 class AddNode(object):
@@ -90,7 +101,7 @@ class AddNode(object):
     def compute(self):
         return self.base.value + self.node.value
 
-    def gradient(self):
+    def gradient(self, node):
         return 1
 
 class MultiplyConstant(object):
@@ -102,8 +113,23 @@ class MultiplyConstant(object):
     def compute(self):
         return self.base.value * self.constant
 
-    def gradient(self):
+    def gradient(self, node):
         return self.constant
+
+class MultiplyNode(object):
+    def __init__(self, inputs):
+        self.inputs = inputs
+        self.base = inputs[0]
+        self.node = inputs[1]
+
+    def compute(self):
+        return self.base.value * self.node.value
+
+    def gradient(self, node):
+        if node == self.base:
+            return self.node.value
+        else:
+            return self.base.value
 
 class CompiledFunction(object):
     def __init__(self, inputs, output):
@@ -137,24 +163,29 @@ def variable(name, value):
     node.operation = DefaultOperation([node])
     return node
 
-def gradient(output, node):
-    nodeGradient = node.operation.gradient()
-
+def gradient(outputFunction, node):
+    node = [node]
+    output = [outputFunction.output]
     d = [1]
 
     def compute(_node):
         changed = False
         _d = 0
-        for parent in _node.parents:
-            if changed == False:
-                changed = True
-            _d += parent.operation.gradient()
-            compute(parent)
+        if output[0] in _node.parents:
+            parent = _node.parents[_node.parents.index(output[0])]
+            changed = True
+            _d += parent.operation.gradient(node[0])
+        else:
+            for parent in _node.parents:
+                if changed == False:
+                    changed = True
+                _d += parent.operation.gradient(node[0])
+                compute(parent)
 
         if changed == True:
             d[0] *= _d
 
-    compute(node)
+    compute(node[0])
 
     return d[0]
 
