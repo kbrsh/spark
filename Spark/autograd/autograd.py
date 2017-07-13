@@ -36,8 +36,8 @@ class AGNode(object):
         if name == None:
             name = self.name
         nextLevel = level + 1
-        indent = "\t|" * level + "\t"
-        graph = self.operation.__class__.__name__ + " \"" + name + "\""
+        indent = "  |" * level + "  "
+        graph = "\x1b[34m" + self.operation.__class__.__name__ + "\x1b[0m \"" + name + "\""
 
         for node in self.operation.inputs:
             if type(node) is AGNode and node != self:
@@ -105,6 +105,5 @@ def gradient(output, node):
             d[0] *= _d
 
     compute(node)
-    print [p.name for p in node.parents]
 
     return d[0]
