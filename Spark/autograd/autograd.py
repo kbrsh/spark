@@ -105,6 +105,33 @@ class MultiplyConstant(object):
     def gradient(self):
         return self.constant
 
+class CompiledFunction(object):
+    def __init__(self, inputs, output):
+        self.inputs = {}
+        self.output = output
+
+        for inputItem in inputs:
+            self.inputs[inputItem.name] = inputItem
+
+    def __call__(self, *inputList):
+        graph = self.output
+        inputs = self.inputs
+        output = [0]
+
+        for i, inputItem in enumerate(inputs):
+            inputs[inputItem].value = inputList[i]
+
+        def computeGate(node):
+            output[0] += node.operation.compute()
+            children = node.operation.inputs
+            for child in children:
+                if type(child) is AGNode and child != node and type(child.operation) is not DefaultOperation:
+                    computeGate(child)
+
+        computeGate(graph)
+
+        return output[0]
+
 def variable(name, value):
     node = AGNode(name, value)
     node.operation = DefaultOperation([node])
@@ -130,3 +157,6 @@ def gradient(output, node):
     compute(node)
 
     return d[0]
+
+def function(inputs, output):
+    return CompiledFunction(inputs, output)
