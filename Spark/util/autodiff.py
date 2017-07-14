@@ -104,7 +104,11 @@ class CompiledFunction(object):
         inputs = self.inputs
 
         for i, inputItem in enumerate(inputs):
-            inputs[inputItem].value = inputList[i]
+            inputListItem = inputList[i]
+            if type(inputListItem) is AGNode:
+                inputs[inputItem].value = inputList[i].value
+            else:
+                inputs[inputItem].value = inputList[i]
 
         def computeGate(node):
             children = node.operation.inputs
