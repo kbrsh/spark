@@ -1,4 +1,4 @@
-import numpy as np
+import util as sp
 
 # Linear Activations
 def linear(x):
@@ -9,31 +9,22 @@ def linearPrime(x):
 
 # Sigmoid Activations
 def sigmoid(x):
-    return 1 / (1 + np.exp(-x))
+    return 1 / (1 + sp.exp(-x))
 
 def sigmoidPrime(x):
-    return np.exp(-x) / ((1 + np.exp(-x)) ** 2)
+    return sp.exp(-x) / ((1 + sp.exp(-x)) ** 2)
 
 # Tanh Activations
 def tanh(x):
-    return np.tanh(x)
+    return sp.tanh(x)
 
 def tanhPrime(x):
-    return 1 / (np.cosh(x)**2)
-
-# ReLu Activations
-def relu(x):
-    return x * (x > 0)
-
-def reluPrime(x):
-    y = np.copy(x)
-    y[x <= 0] = 0
-    return y
+    return 1 / (sp.cosh(x)**2)
 
 # Softmax Activations
 def softmax(x):
-    exp = np.exp(x - np.max(x))
-    return exp / np.sum(exp, axis=1, keepdims=True)
+    exp = sp.exp(x - sp.max(x))
+    return exp / sp.sum(exp, axis=1, keepdims=True)
 
 def softmaxPrime(x):
     return x / x.shape[0]
