@@ -10,5 +10,14 @@ def zeros(*args, **kwargs):
 def ones(*args, **kwargs):
     return np.ones(*args, **kwargs)
 
+def full(*args, **kwargs):
+    return np.full(*args, **kwargs)
+
 def add(arr, item):
     return np.add(arr, item)
+
+def multiply(arr, item):
+    return np.multiply(arr, item)
+
+def dot(arr, item):
+    return np.dot(arr, item)

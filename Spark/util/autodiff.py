@@ -35,6 +35,28 @@ class AGNode(object):
 
             return node
 
+    def __mul__(self, item):
+        if type(item) is int:
+            node = AGNode("Output", 0)
+            operation = MultiplyConstant(node, [self, item])
+            node.operation = operation
+            node.value = operation.compute()
+
+            self.parents.append(node)
+
+            return node
+
+        if type(item) is AGNode:
+            node = AGNode("Output", 0)
+            operation = MultiplyNode(node, [self, item])
+            node.operation = operation
+            node.value = operation.compute()
+
+            self.parents.append(node)
+            item.parents.append(node)
+
+            return node
+
     def toGraph(self, name=None, level=0):
         if name == None:
             name = self.name
@@ -61,21 +83,6 @@ class DefaultOperation(object):
     def gradient(self, node):
         return None
 
-class AddNode(object):
-    def __init__(self, node, inputs):
-        self.node = node
-        self.inputs = inputs
-        self.base = inputs[0]
-        self.nodeToAdd = inputs[1]
-
-    def compute(self):
-        output = sp.add(self.base.value, self.nodeToAdd.value)
-        self.node.value = output
-        return output
-
-    def gradient(self, node):
-        return sp.ones(self.base.value.shape)
-
 class AddConstant(object):
     def __init__(self, node, inputs):
         self.node = node
@@ -89,7 +96,55 @@ class AddConstant(object):
         return output
 
     def gradient(self, node):
-        return sp.ones(self.base.value.shape)
+        return sp.ones(self.base.value.shape, dtype=float)
+
+class AddNode(object):
+    def __init__(self, node, inputs):
+        self.node = node
+        self.inputs = inputs
+        self.base = inputs[0]
+        self.nodeToAdd = inputs[1]
+
+    def compute(self):
+        output = sp.add(self.base.value, self.nodeToAdd.value)
+        self.node.value = output
+        return output
+
+    def gradient(self, node):
+        return sp.ones(self.base.value.shape, dtype=float)
+
+class MultiplyConstant(object):
+    def __init__(self, node, inputs):
+        self.node = node
+        self.inputs = inputs
+        self.base = inputs[0]
+        self.constant = inputs[1]
+
+    def compute(self):
+        output = sp.multiply(self.base.value, self.constant)
+        self.node.value = output
+        return output
+
+    def gradient(self, node):
+        return sp.full(self.base.value.shape, self.constant, dtype=float)
+
+class MultiplyNode(object):
+    def __init__(self, node, inputs):
+        self.node = node
+        self.inputs = inputs
+        self.base = inputs[0]
+        self.nodeToMultiply = inputs[1]
+
+    def compute(self):
+        output = sp.multiply(self.base.value, self.nodeToMultiply.value)
+        self.node.value = output
+        return output
+
+    def gradient(self, node):
+        if node == self.base:
+            return self.nodeToMultiply.value
+        else:
+            return self.base.value
 
 class CompiledFunction(object):
     def __init__(self, inputs, output):
