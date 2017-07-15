@@ -1,5 +1,4 @@
 import numpy as np
-import util as sp
 
 class AGNode(object):
     def __init__(self, name, value):
@@ -9,9 +8,6 @@ class AGNode(object):
 
     def __str__(self):
         return str(self.value)
-
-    def __radd__(self, item):
-        pass
 
     def __add__(self, item):
         if type(item) is int:
@@ -91,7 +87,7 @@ class AddConstant(object):
         self.constant = inputs[1]
 
     def compute(self):
-        output = sp.add(self.base.value, self.constant)
+        output = np.add(self.base.value, self.constant)
         self.node.value = output
         return output
 
@@ -106,7 +102,7 @@ class AddNode(object):
         self.nodeToAdd = inputs[1]
 
     def compute(self):
-        output = sp.add(self.base.value, self.nodeToAdd.value)
+        output = np.add(self.base.value, self.nodeToAdd.value)
         self.node.value = output
         return output
 
@@ -121,12 +117,12 @@ class MultiplyConstant(object):
         self.constant = inputs[1]
 
     def compute(self):
-        output = sp.multiply(self.base.value, self.constant)
+        output = np.multiply(self.base.value, self.constant)
         self.node.value = output
         return output
 
     def gradient(self, node):
-        return sp.full(self.base.value.shape, self.constant, dtype=float)
+        return np.full(self.base.value.shape, self.constant, dtype=float)
 
 class MultiplyNode(object):
     def __init__(self, node, inputs):
@@ -136,7 +132,7 @@ class MultiplyNode(object):
         self.nodeToMultiply = inputs[1]
 
     def compute(self):
-        output = sp.multiply(self.base.value, self.nodeToMultiply.value)
+        output = np.multiply(self.base.value, self.nodeToMultiply.value)
         self.node.value = output
         return output
 
