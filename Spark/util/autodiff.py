@@ -127,7 +127,9 @@ class AddConstant(object):
 
     def gradient(self, node):
         base = self.base
+
         grad = None
+
         if base.gradient is None:
             if base == node:
                 grad = np.ones(base.value.shape, dtype=float)
@@ -152,7 +154,29 @@ class AddNode(object):
         return output
 
     def gradient(self, node):
-        return np.ones(self.base.value.shape, dtype=float)
+        base = self.base
+        nodeToAdd = self.nodeToAdd
+
+        baseGrad = base.gradient
+        nodeToAddGrad = nodeToAdd.gradient
+
+        grad = None
+
+        if baseGrad is None:
+            if base == node:
+                baseGrad = np.ones(base.value.shape, dtype=float)
+            else:
+                baseGrad = np.zeros(base.value.shape, dtype=float)
+
+        if nodeToAddGrad is None:
+            if nodeToAdd == node:
+                nodeToAddGrad = np.ones(nodeToAdd.value.shape, dtype=float)
+            else:
+                nodeToAddGrad = np.zeros(nodeToAdd.value.shape, dtype=float)
+
+        grad = np.add(baseGrad, nodeToAddGrad)
+        self.node.gradient = grad
+        return grad
 
 class SubtractConstant(object):
     def __init__(self, node, inputs):
@@ -284,19 +308,16 @@ def gradient(outputFunction, node):
 
     def computeParent(_node):
         if _node.parent != None:
-            if type(_node.operation) is not DefaultOperation:
-                _node.operation.gradient(respectNode[0])
             return computeParent(_node.parent)
         else:
             return _node
 
-    directParent = node.parent
-    children = directParent.operation.inputs
+    parent = computeParent(node)
+    children = parent.operation.inputs
     for child in children:
-        if type(child) is AGNode and child != directParent and type(child.operation) is not DefaultOperation:
+        if type(child) is AGNode and child != parent and type(child.operation) is not DefaultOperation:
             computeChildren(child)
 
-    parent = computeParent(node)
     return parent.operation.gradient(node)
 
 def function(inputs, output):
