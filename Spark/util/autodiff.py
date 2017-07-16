@@ -219,7 +219,29 @@ class SubtractNode(object):
         return output
 
     def gradient(self, node):
-        return np.zeros(self.base.value.shape, dtype=float)
+        base = self.base
+        nodeToSubtract = self.nodeToSubtract
+
+        baseGrad = base.gradient
+        nodeToSubtractGrad = nodeToSubtract.gradient
+
+        grad = None
+
+        if baseGrad is None:
+            if base == node:
+                baseGrad = np.ones(base.value.shape, dtype=float)
+            else:
+                baseGrad = np.zeros(base.value.shape, dtype=float)
+
+        if nodeToSubtractGrad is None:
+            if nodeToSubtract == node:
+                nodeToSubtractGrad = np.ones(nodeToSubtract.value.shape, dtype=float)
+            else:
+                nodeToSubtractGrad = np.zeros(nodeToSubtract.value.shape, dtype=float)
+
+        grad = np.subtract(baseGrad, nodeToSubtractGrad)
+        self.node.gradient = grad
+        return grad
 
 class MultiplyConstant(object):
     def __init__(self, node, inputs):
