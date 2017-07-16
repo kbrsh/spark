@@ -323,7 +323,14 @@ class DotNode(object):
         return output
 
     def gradient(self, node):
-        return np.dot(self.base.value.T, self.node.parent.operation.compute())
+        grad = None
+
+        if nodeGradient is not None:
+            self.node.parent.operation.gradient(self.node)
+            grad = np.dot(self.base.value.T, self.node.parent.gradient)
+
+        self.node.gradient = grad
+        return grad
 
 class CompiledFunction(object):
     def __init__(self, inputs, output):
@@ -365,29 +372,23 @@ def variable(name, value):
 
 def gradient(outputFunction, node):
     respectNode = [node]
-    output = [outputFunction.output]
-    d = 0
+    d = [1]
 
-    def computeChildren(_node):
-        children = _node.operation.inputs
-        for child in children:
-            if type(child) is AGNode and child != _node and type(child.operation) is not DefaultOperation:
-                computeGate(child)
-        _node.operation.gradient(respectNode[0])
-
-    def computeParent(_node):
-        if _node.parent != None:
-            return computeParent(_node.parent)
+    def computeParent(node):
+        if node.parent != None:
+            return computeParent(node.parent)
         else:
-            return _node
+            return node
+
+    def computeChildren(node):
+        d[0] *= node.operation.gradient(respectNode[0])
+        # children = node.operation.inputs
+        # for child in variable:
+        #     pass
 
     parent = computeParent(node)
-    children = parent.operation.inputs
-    for child in children:
-        if type(child) is AGNode and child != parent and type(child.operation) is not DefaultOperation:
-            computeChildren(child)
-
-    return parent.operation.gradient(node)
+    computeChildren(parent)
+    print d[0]
 
 def function(inputs, output):
     return CompiledFunction(inputs, output)
