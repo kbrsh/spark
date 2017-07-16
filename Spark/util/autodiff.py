@@ -286,10 +286,29 @@ class MultiplyNode(object):
         return output
 
     def gradient(self, node):
-        if node == self.base:
-            return self.nodeToMultiply.value
-        else:
-            return self.base.value
+        base = self.base
+        nodeToMultiply = self.nodeToMultiply
+
+        baseGrad = base.gradient
+        nodeToMultiplyGrad = nodeToMultiply.gradient
+
+        grad = None
+
+        if baseGrad is None:
+            if base == node:
+                baseGrad = np.ones(base.value.shape, dtype=float)
+            else:
+                baseGrad = np.zeros(base.value.shape, dtype=float)
+
+        if nodeToMultiplyGrad is None:
+            if nodeToMultiply == node:
+                nodeToMultiplyGrad = np.ones(nodeToMultiply.value.shape, dtype=float)
+            else:
+                nodeToMultiplyGrad = np.zeros(nodeToMultiply.value.shape, dtype=float)
+
+        grad = np.add(np.multiply(base.value, nodeToMultiplyGrad), np.multiply(baseGrad, nodeToMultiply.value))
+        self.node.gradient = grad
+        return grad
 
 class DotNode(object):
     def __init__(self, node, inputs):
