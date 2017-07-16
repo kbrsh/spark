@@ -256,7 +256,22 @@ class MultiplyConstant(object):
         return output
 
     def gradient(self, node):
-        return np.full(self.base.value.shape, self.constant, dtype=float)
+        base = self.base
+        constant = self.constant
+
+        baseGrad = base.gradient
+
+        grad = None
+
+        if baseGrad is None:
+            if base == node:
+                baseGrad = np.ones(base.value.shape, dtype=float)
+            else:
+                baseGrad = np.zeros(base.value.shape, dtype=float)
+
+        grad = np.multiply(baseGrad, constant)
+        self.node.gradient = grad
+        return grad
 
 class MultiplyNode(object):
     def __init__(self, node, inputs):
