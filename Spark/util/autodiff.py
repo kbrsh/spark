@@ -4,7 +4,8 @@ class AGNode(object):
     def __init__(self, name, value):
         self.name = name
         self.value = value
-        self.parents = []
+        self.gradient = None
+        self.parent = None
 
     def __str__(self):
         return str(self.value)
@@ -16,7 +17,7 @@ class AGNode(object):
             node.operation = operation
             node.value = operation.compute()
 
-            self.parents.append(node)
+            self.parent = node
 
             return node
 
@@ -26,8 +27,30 @@ class AGNode(object):
             node.operation = operation
             node.value = operation.compute()
 
-            self.parents.append(node)
-            item.parents.append(node)
+            self.parent = node
+            item.parent = node
+
+            return node
+
+    def __sub__(self, item):
+        if type(item) is int:
+            node = AGNode("Output", 0)
+            operation = SubtractConstant(node, [self, item])
+            node.operation = operation
+            node.value = operation.compute()
+
+            self.parent = node
+
+            return node
+
+        elif type(item) is AGNode:
+            node = AGNode("Output", 0)
+            operation = SubtractNode(node, [self, item])
+            node.operation = operation
+            node.value = operation.compute()
+
+            self.parent = node
+            item.parent = node
 
             return node
 
@@ -38,7 +61,7 @@ class AGNode(object):
             node.operation = operation
             node.value = operation.compute()
 
-            self.parents.append(node)
+            self.parent = node
 
             return node
 
@@ -48,10 +71,21 @@ class AGNode(object):
             node.operation = operation
             node.value = operation.compute()
 
-            self.parents.append(node)
-            item.parents.append(node)
+            self.parent = node
+            item.parent = node
 
             return node
+
+    def __dot__(self, item):
+        node = AGNode("Output", 0)
+        operation = DotNode(node, [self, item])
+        node.operation = operation
+        node.value = operation.compute()
+
+        self.parent = node
+        item.parent = node
+
+        return node
 
     def toGraph(self, name=None, level=0):
         if name == None:
@@ -92,7 +126,18 @@ class AddConstant(object):
         return output
 
     def gradient(self, node):
-        return sp.ones(self.base.value.shape, dtype=float)
+        base = self.base
+        grad = None
+        if base.gradient is None:
+            if base == node:
+                grad = np.ones(base.value.shape, dtype=float)
+            else:
+                grad = np.zeros(base.value.shape, dtype=float)
+        else:
+            grad = base.gradient
+
+        self.node.gradient = grad
+        return grad
 
 class AddNode(object):
     def __init__(self, node, inputs):
@@ -107,7 +152,37 @@ class AddNode(object):
         return output
 
     def gradient(self, node):
-        return sp.ones(self.base.value.shape, dtype=float)
+        return np.ones(self.base.value.shape, dtype=float)
+
+class SubtractConstant(object):
+    def __init__(self, node, inputs):
+        self.node = node
+        self.inputs = inputs
+        self.base = inputs[0]
+        self.constant = inputs[1]
+
+    def compute(self):
+        output = np.subtract(self.base.value, self.constant)
+        self.node.value = output
+        return output
+
+    def gradient(self, node):
+        return np.ones(self.base.value.shape, dtype=float)
+
+class SubtractNode(object):
+    def __init__(self, node, inputs):
+        self.node = node
+        self.inputs = inputs
+        self.base = inputs[0]
+        self.nodeToSubtract = inputs[1]
+
+    def compute(self):
+        output = np.subtract(self.base.value, self.nodeToSubtract.value)
+        self.node.value = output
+        return output
+
+    def gradient(self, node):
+        return np.zeros(self.base.value.shape, dtype=float)
 
 class MultiplyConstant(object):
     def __init__(self, node, inputs):
@@ -141,6 +216,21 @@ class MultiplyNode(object):
             return self.nodeToMultiply.value
         else:
             return self.base.value
+
+class DotNode(object):
+    def __init__(self, node, inputs):
+        self.node = node
+        self.inputs = inputs
+        self.base = inputs[0]
+        self.nodeToDot = inputs[1]
+
+    def compute(self):
+        output = np.dot(self.base.value, self.nodeToDot.value)
+        self.node.value = output
+        return output
+
+    def gradient(self, node):
+        return np.dot(self.base.value.T, self.node.parent.operation.compute())
 
 class CompiledFunction(object):
     def __init__(self, inputs, output):
@@ -181,25 +271,33 @@ def variable(name, value):
     return node
 
 def gradient(outputFunction, node):
-    node = [node]
+    respectNode = [node]
     output = [outputFunction.output]
-    d = [1]
+    d = 0
 
-    def compute(_node):
-        changed = False
-        _d = 0
-        for parent in _node.parents:
-            if changed == False:
-                changed = True
-            _d += parent.operation.gradient(node[0])
-            compute(parent)
+    def computeChildren(_node):
+        children = _node.operation.inputs
+        for child in children:
+            if type(child) is AGNode and child != _node and type(child.operation) is not DefaultOperation:
+                computeGate(child)
+        _node.operation.gradient(respectNode[0])
 
-        if changed == True:
-            d[0] *= _d
+    def computeParent(_node):
+        if _node.parent != None:
+            if type(_node.operation) is not DefaultOperation:
+                _node.operation.gradient(respectNode[0])
+            return computeParent(_node.parent)
+        else:
+            return _node
 
-    compute(node[0])
+    directParent = node.parent
+    children = directParent.operation.inputs
+    for child in children:
+        if type(child) is AGNode and child != directParent and type(child.operation) is not DefaultOperation:
+            computeChildren(child)
 
-    return d[0]
+    parent = computeParent(node)
+    return parent.operation.gradient(node)
 
 def function(inputs, output):
     return CompiledFunction(inputs, output)
