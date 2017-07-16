@@ -191,7 +191,20 @@ class SubtractConstant(object):
         return output
 
     def gradient(self, node):
-        return np.ones(self.base.value.shape, dtype=float)
+        base = self.base
+
+        grad = None
+
+        if base.gradient is None:
+            if base == node:
+                grad = np.ones(base.value.shape, dtype=float)
+            else:
+                grad = np.zeros(base.value.shape, dtype=float)
+        else:
+            grad = base.gradient
+
+        self.node.gradient = grad
+        return grad
 
 class SubtractNode(object):
     def __init__(self, node, inputs):
