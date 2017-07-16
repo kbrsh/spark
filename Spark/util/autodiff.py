@@ -91,7 +91,7 @@ class AGNode(object):
         if name == None:
             name = self.name
         nextLevel = level + 1
-        indent = "  |" * level + "  "
+        indent = "    |" * level + "    "
         graph = "\x1b[34m" + self.operation.__class__.__name__ + "\x1b[0m \"" + name + "\""
 
         for node in self.operation.inputs:
