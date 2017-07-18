@@ -1,6 +1,6 @@
 import numpy as np
 
-class AGNode(object):
+class ADNode(object):
     def __init__(self, name, value):
         self.name = name
         self.value = value
@@ -12,7 +12,7 @@ class AGNode(object):
 
     def __add__(self, item):
         if type(item) is int:
-            node = AGNode("Output", 0)
+            node = ADNode("Output", 0)
             operation = AddConstant(node, [self, item])
             node.operation = operation
             node.value = operation.compute()
@@ -21,8 +21,8 @@ class AGNode(object):
 
             return node
 
-        elif type(item) is AGNode:
-            node = AGNode("Output", 0)
+        elif type(item) is ADNode:
+            node = ADNode("Output", 0)
             operation = AddNode(node, [self, item])
             node.operation = operation
             node.value = operation.compute()
@@ -34,7 +34,7 @@ class AGNode(object):
 
     def __sub__(self, item):
         if type(item) is int:
-            node = AGNode("Output", 0)
+            node = ADNode("Output", 0)
             operation = SubtractConstant(node, [self, item])
             node.operation = operation
             node.value = operation.compute()
@@ -43,8 +43,8 @@ class AGNode(object):
 
             return node
 
-        elif type(item) is AGNode:
-            node = AGNode("Output", 0)
+        elif type(item) is ADNode:
+            node = ADNode("Output", 0)
             operation = SubtractNode(node, [self, item])
             node.operation = operation
             node.value = operation.compute()
@@ -56,7 +56,7 @@ class AGNode(object):
 
     def __mul__(self, item):
         if type(item) is int:
-            node = AGNode("Output", 0)
+            node = ADNode("Output", 0)
             operation = MultiplyConstant(node, [self, item])
             node.operation = operation
             node.value = operation.compute()
@@ -65,8 +65,8 @@ class AGNode(object):
 
             return node
 
-        if type(item) is AGNode:
-            node = AGNode("Output", 0)
+        if type(item) is ADNode:
+            node = ADNode("Output", 0)
             operation = MultiplyNode(node, [self, item])
             node.operation = operation
             node.value = operation.compute()
@@ -77,7 +77,7 @@ class AGNode(object):
             return node
 
     def __dot__(self, item):
-        node = AGNode("Output", 0)
+        node = ADNode("Output", 0)
         operation = DotNode(node, [self, item])
         node.operation = operation
         node.value = operation.compute()
@@ -95,7 +95,7 @@ class AGNode(object):
         graph = "\x1b[34m" + self.operation.__class__.__name__ + "\x1b[0m \"" + name + "\""
 
         for node in self.operation.inputs:
-            if type(node) is AGNode and node != self:
+            if type(node) is ADNode and node != self:
                 graph += "\n" + indent + "| " + node.toGraph(level=nextLevel)
             elif type(node) is int:
                 graph += "\n" + indent + "| " + str(node)
@@ -125,21 +125,13 @@ class AddConstant(object):
         self.node.value = output
         return output
 
-    def gradient(self, node):
-        base = self.base
-
-        grad = None
-
-        if base.gradient is None:
-            if base == node:
-                grad = np.ones(base.value.shape, dtype=float)
-            else:
-                grad = np.zeros(base.value.shape, dtype=float)
-        else:
-            grad = base.gradient
-
-        self.node.gradient = grad
-        return grad
+    def gradient(self):
+        elements = []
+        print self.node.gradient
+        for child in self.inputs:
+            print child
+        # print np.sum(np.multiply() for child in self.inputs)
+        return "HI"
 
 class AddNode(object):
     def __init__(self, node, inputs):
@@ -153,30 +145,8 @@ class AddNode(object):
         self.node.value = output
         return output
 
-    def gradient(self, node):
-        base = self.base
-        nodeToAdd = self.nodeToAdd
-
-        baseGrad = base.gradient
-        nodeToAddGrad = nodeToAdd.gradient
-
-        grad = None
-
-        if baseGrad is None:
-            if base == node:
-                baseGrad = np.ones(base.value.shape, dtype=float)
-            else:
-                baseGrad = np.zeros(base.value.shape, dtype=float)
-
-        if nodeToAddGrad is None:
-            if nodeToAdd == node:
-                nodeToAddGrad = np.ones(nodeToAdd.value.shape, dtype=float)
-            else:
-                nodeToAddGrad = np.zeros(nodeToAdd.value.shape, dtype=float)
-
-        grad = np.add(baseGrad, nodeToAddGrad)
-        self.node.gradient = grad
-        return grad
+    def gradient(self):
+        pass
 
 class SubtractConstant(object):
     def __init__(self, node, inputs):
@@ -346,7 +316,7 @@ class CompiledFunction(object):
 
         for i, inputItem in enumerate(inputs):
             inputListItem = inputList[i]
-            if type(inputListItem) is AGNode:
+            if type(inputListItem) is ADNode:
                 inputs[inputItem].value = inputList[i].value
             else:
                 inputs[inputItem].value = inputList[i]
@@ -354,25 +324,25 @@ class CompiledFunction(object):
         def computeGate(node):
             children = node.operation.inputs
             for child in children:
-                if type(child) is AGNode and child != node and type(child.operation) is not DefaultOperation:
+                if type(child) is ADNode and child != node and type(child.operation) is not DefaultOperation:
                     computeGate(child)
             node.operation.compute()
 
         children = graph.operation.inputs
         for child in children:
-            if type(child) is AGNode and child != graph and type(child.operation) is not DefaultOperation:
+            if type(child) is ADNode and child != graph and type(child.operation) is not DefaultOperation:
                 computeGate(child)
 
         return graph.operation.compute()
 
 def variable(name, value):
-    node = AGNode(name, value)
+    node = ADNode(name, value)
     node.operation = DefaultOperation([node])
     return node
 
 def gradient(outputFunction, node):
     respectNode = [node]
-    d = [1]
+    d = None
 
     def computeParent(node):
         if node.parent != None:
@@ -380,15 +350,18 @@ def gradient(outputFunction, node):
         else:
             return node
 
-    def computeChildren(node):
-        d[0] *= node.operation.gradient(respectNode[0])
-        # children = node.operation.inputs
-        # for child in variable:
-        #     pass
+    # def computeChildren(node):
+    #     d[0] *= node.operation.gradient(respectNode[0])
+    #     children = node.operation.inputs
+    #     for child in children:
+    #         if type(child) is ADNode and child != node and type(child.operation) is not DefaultOperation:
+    #             computeChildren(node)
 
     parent = computeParent(node)
-    computeChildren(parent)
-    print d[0]
+    parent.gradient = np.ones(parent.value.shape)
+    d = parent.operation.gradient()
+
+    return d
 
 def function(inputs, output):
     return CompiledFunction(inputs, output)
