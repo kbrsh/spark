@@ -358,8 +358,8 @@ def gradient(outputFunction, node):
     #             computeChildren(node)
 
     parent = computeParent(node)
-    parent.gradient = np.ones(parent.value.shape)
-    d = parent.operation.gradient()
+    # parent.gradient = np.ones(parent.value.shape)
+    # d = parent.operation.gradient()
 
     return d
 
