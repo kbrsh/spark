@@ -1,6 +1,6 @@
 # Spark
 
-Flexible AI Library for Python
+Flexible AI Library
 
 ### License
 
