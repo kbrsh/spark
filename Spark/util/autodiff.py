@@ -98,11 +98,11 @@ class ADNode(object):
             if type(node) is ADNode and node != self:
                 graph += "\n" + indent + "| " + node.toGraph(level=nextLevel)
             elif type(node) is int:
-                graph += "\n" + indent + "| " + str(node)
+                graph += "\n" + indent + "| \x1b[34mConstant \x1b[0m" + str(node)
 
         return graph
 
-class DefaultOperation(object):
+class Variable(object):
     def __init__(self, inputs):
         self.inputs = inputs
         self.input = inputs[0]
@@ -110,7 +110,7 @@ class DefaultOperation(object):
     def compute(self):
         return self.input
 
-    def gradient(self, node):
+    def gradient(self):
         return None
 
 class AddConstant(object):
@@ -126,12 +126,12 @@ class AddConstant(object):
         return output
 
     def gradient(self):
-        elements = []
+        print "Start"
         print self.node.gradient
         for child in self.inputs:
+            # gradient =
             print child
         # print np.sum(np.multiply() for child in self.inputs)
-        return "HI"
 
 class AddNode(object):
     def __init__(self, node, inputs):
@@ -160,21 +160,8 @@ class SubtractConstant(object):
         self.node.value = output
         return output
 
-    def gradient(self, node):
-        base = self.base
-
-        grad = None
-
-        if base.gradient is None:
-            if base == node:
-                grad = np.ones(base.value.shape, dtype=float)
-            else:
-                grad = np.zeros(base.value.shape, dtype=float)
-        else:
-            grad = base.gradient
-
-        self.node.gradient = grad
-        return grad
+    def gradient(self):
+        pass
 
 class SubtractNode(object):
     def __init__(self, node, inputs):
@@ -188,30 +175,8 @@ class SubtractNode(object):
         self.node.value = output
         return output
 
-    def gradient(self, node):
-        base = self.base
-        nodeToSubtract = self.nodeToSubtract
-
-        baseGrad = base.gradient
-        nodeToSubtractGrad = nodeToSubtract.gradient
-
-        grad = None
-
-        if baseGrad is None:
-            if base == node:
-                baseGrad = np.ones(base.value.shape, dtype=float)
-            else:
-                baseGrad = np.zeros(base.value.shape, dtype=float)
-
-        if nodeToSubtractGrad is None:
-            if nodeToSubtract == node:
-                nodeToSubtractGrad = np.ones(nodeToSubtract.value.shape, dtype=float)
-            else:
-                nodeToSubtractGrad = np.zeros(nodeToSubtract.value.shape, dtype=float)
-
-        grad = np.subtract(baseGrad, nodeToSubtractGrad)
-        self.node.gradient = grad
-        return grad
+    def gradient(self):
+        pass
 
 class MultiplyConstant(object):
     def __init__(self, node, inputs):
@@ -225,23 +190,8 @@ class MultiplyConstant(object):
         self.node.value = output
         return output
 
-    def gradient(self, node):
-        base = self.base
-        constant = self.constant
-
-        baseGrad = base.gradient
-
-        grad = None
-
-        if baseGrad is None:
-            if base == node:
-                baseGrad = np.ones(base.value.shape, dtype=float)
-            else:
-                baseGrad = np.zeros(base.value.shape, dtype=float)
-
-        grad = np.multiply(baseGrad, constant)
-        self.node.gradient = grad
-        return grad
+    def gradient(self):
+        pass
 
 class MultiplyNode(object):
     def __init__(self, node, inputs):
@@ -255,30 +205,8 @@ class MultiplyNode(object):
         self.node.value = output
         return output
 
-    def gradient(self, node):
-        base = self.base
-        nodeToMultiply = self.nodeToMultiply
-
-        baseGrad = base.gradient
-        nodeToMultiplyGrad = nodeToMultiply.gradient
-
-        grad = None
-
-        if baseGrad is None:
-            if base == node:
-                baseGrad = np.ones(base.value.shape, dtype=float)
-            else:
-                baseGrad = np.zeros(base.value.shape, dtype=float)
-
-        if nodeToMultiplyGrad is None:
-            if nodeToMultiply == node:
-                nodeToMultiplyGrad = np.ones(nodeToMultiply.value.shape, dtype=float)
-            else:
-                nodeToMultiplyGrad = np.zeros(nodeToMultiply.value.shape, dtype=float)
-
-        grad = np.add(np.multiply(base.value, nodeToMultiplyGrad), np.multiply(baseGrad, nodeToMultiply.value))
-        self.node.gradient = grad
-        return grad
+    def gradient(self):
+        pass
 
 class DotNode(object):
     def __init__(self, node, inputs):
@@ -292,15 +220,8 @@ class DotNode(object):
         self.node.value = output
         return output
 
-    def gradient(self, node):
-        grad = None
-
-        if nodeGradient is not None:
-            self.node.parent.operation.gradient(self.node)
-            grad = np.dot(self.base.value.T, self.node.parent.gradient)
-
-        self.node.gradient = grad
-        return grad
+    def gradient(self):
+        pass
 
 class CompiledFunction(object):
     def __init__(self, inputs, output):
@@ -324,44 +245,32 @@ class CompiledFunction(object):
         def computeGate(node):
             children = node.operation.inputs
             for child in children:
-                if type(child) is ADNode and child != node and type(child.operation) is not DefaultOperation:
+                if type(child) is ADNode and child != node and type(child.operation) is not Variable:
                     computeGate(child)
             node.operation.compute()
 
         children = graph.operation.inputs
         for child in children:
-            if type(child) is ADNode and child != graph and type(child.operation) is not DefaultOperation:
+            if type(child) is ADNode and child != graph and type(child.operation) is not Variable:
                 computeGate(child)
 
         return graph.operation.compute()
 
 def variable(name, value):
     node = ADNode(name, value)
-    node.operation = DefaultOperation([node])
+    node.operation = Variable([node])
     return node
 
 def gradient(outputFunction, node):
-    respectNode = [node]
-    d = None
-
     def computeParent(node):
         if node.parent != None:
             return computeParent(node.parent)
         else:
             return node
 
-    # def computeChildren(node):
-    #     d[0] *= node.operation.gradient(respectNode[0])
-    #     children = node.operation.inputs
-    #     for child in children:
-    #         if type(child) is ADNode and child != node and type(child.operation) is not DefaultOperation:
-    #             computeChildren(node)
-
     parent = computeParent(node)
-    # parent.gradient = np.ones(parent.value.shape)
-    # d = parent.operation.gradient()
-
-    return d
+    parent.gradient = 1
+    return parent.operation.gradient()
 
 def function(inputs, output):
     return CompiledFunction(inputs, output)
