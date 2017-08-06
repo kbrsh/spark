@@ -111,7 +111,7 @@ class Variable(object):
         return self.input
 
     def gradient(self):
-        return None
+        return 1
 
 class AddConstant(object):
     def __init__(self, node, inputs):
@@ -125,12 +125,18 @@ class AddConstant(object):
         self.node.value = output
         return output
 
-    def gradient(self):
+    def gradient(self, parent):
         print "Start"
-        print self.node.gradient
+        node = self.node
+        total = 0
+
         for child in self.inputs:
-            # gradient =
-            print child
+            if type(child) is ADNode:
+                total += child.operation.gradient(parent)
+
+        node.gradient *= total
+        return self.node.gradient
+
         # print np.sum(np.multiply() for child in self.inputs)
 
 class AddNode(object):
@@ -269,8 +275,7 @@ def gradient(outputFunction, node):
             return node
 
     parent = computeParent(node)
-    parent.gradient = 1
-    return parent.operation.gradient()
+    return parent.operation.gradient(1)
 
 def function(inputs, output):
     return CompiledFunction(inputs, output)
