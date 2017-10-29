@@ -1,4 +1,4 @@
-import util as sp
+from .util import util as sp
 
 # Linear Activations
 def linear(x):

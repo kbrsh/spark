@@ -14,16 +14,13 @@ class Spark(object):
         self.layers.append(layer)
 
     def train(self, X, y):
-        # Setup inputs
-        self.inputSize = X[0].shape[0]
+        # Inputs
         self.X = X
 
-        # Setup outputs
-        self.outputSize = y[0].shape[0]
+        # Outputs
         self.y = y
 
-    def build(self, learningRate=1e-2, loss='meanSquared'):
-        a, b = losses.get(loss)
+    def build(self, learningRate=1e-2, loss="meanSquared"):
         self.loss, self.lossPrime = losses.get(loss)
         self.learningRate = learningRate
 
@@ -31,20 +28,13 @@ class Spark(object):
         inputs = self.X
         outputs = self.y
 
-        lastLayer = self.layers[len(self.layers) - 1]
-
         for epoch in xrange(epochs):
-            loss = 0
-
             lastInput = inputs
             y = outputs
 
             # Forward Propagate Layers
             for layer in self.layers:
                 lastInput = layer.forward(lastInput)
-
-            # Obtain Loss
-            loss += self.loss(lastInput, y)
 
             # Backward Propagate Layers
             dY = self.lossPrime(lastInput, y)
@@ -64,12 +54,9 @@ class Spark(object):
 
 
 
-            print 'Epoch: ' + str(epoch)
-            l = np.mean(loss)
-            assert l == l
-            print 'Loss: {0:.20f}'.format(l)
-            print ''
-
+            print("Epoch: " + str(epoch))
+            print("Loss: " + self.loss(lastInput, y))
+            print()
 
     def predict(self, y):
         for layer in self.layers:
