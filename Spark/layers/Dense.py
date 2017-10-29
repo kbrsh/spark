@@ -1,49 +1,30 @@
 from .Layer import Layer
-from ..activations import activations
+from ..activations import Activations
 
 import numpy as np
 
 class Dense(Layer):
-    def __init__(self, inputSize, outputSize, activation=None):
-        # Input/Output Size
-        self.inputSize = inputSize
-        self.outputSize = outputSize
-
+    def __init__(self, inputSize, outputSize, activation="Linear"):
         # Generate Weights
-        self.WH = np.random.randn(self.inputSize, self.outputSize) * 0.1
+        self.W = np.random.randn(inputSize, outputSize)
 
         # Generate Biases
-        self.bh = np.zeros((1, self.outputSize))
-
-        # Cache for Adam Optimizer
-        self.WHm = np.zeros_like(self.WH)
-        self.WHv = np.zeros_like(self.WH)
-
-        self.bhm = np.zeros_like(self.bh)
-        self.bhv = np.zeros_like(self.bh)
+        self.b = np.zeros((1, outputSize))
 
         # Setup Activation Function
-        self.activation, self.activationPrime = activations(activation)
+        self.activation, self.activationPrime = Activations(activation)
+
+    def addOptimizer(self, learningRate, optimizer):
+        self.optimizer = optimizer(learningRate)
 
     def forward(self, X):
         self.X = X
-        self.o = self.activation(np.dot(X, self.WH) + self.bh)
+        self.o = self.activation(np.dot(X, self.W) + self.b)
         return self.o
 
     def backward(self, dO):
-        # Back Propagate into Dot Product
-        dY = np.multiply(dO, self.activationPrime(self.o))
-
-        # Back Propagate into Bias
-        dbh = np.sum(dO, axis=0, keepdims=True)
-
-        # Back Propagate into Weights
-        dW = np.dot(self.X.T, dY)
-
-        # Back Propagate into Inputs
-        dX = np.dot(dY, self.WH.T)
-
-        return dX, [dW, dbh]
-
-    def getParams(self):
-        return [self.WH, self.bh], [self.WHm, self.bhm], [self.WHv, self.bhv]
+        X = self.X
+        W = self.W
+        gradient = np.multiply(np.multiply(dO, self.activationPrime(self.o)), np.add(np.dot(X, np.ones(W.shape)), np.dot(np.zeros(X.shape), W)))
+        self.W = self.optimizer.optimize(W, gradient)
+        return gradient
