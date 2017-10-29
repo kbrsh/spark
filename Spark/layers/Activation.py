@@ -1,12 +1,12 @@
-from . import Layer
-from .. import activations
+from .Layer import Layer
+from ..activations import activations
 
 import numpy as np
 
-class Activation(Layer.Layer):
+class Activation(Layer):
     def __init__(self, name):
         # Setup Activation Function
-        self.activation, self.activationPrime = activations.get(name)
+        self.activation, self.activationPrime = activations(name)
 
     def forward(self, X):
         self.o = self.activation(X)

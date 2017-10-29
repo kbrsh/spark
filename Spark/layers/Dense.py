@@ -1,9 +1,9 @@
-from . import Layer
-from .. import activations
+from .Layer import Layer
+from ..activations import activations
 
 import numpy as np
 
-class Dense(Layer.Layer):
+class Dense(Layer):
     def __init__(self, inputSize, outputSize, activation=None):
         # Input/Output Size
         self.inputSize = inputSize
@@ -23,7 +23,7 @@ class Dense(Layer.Layer):
         self.bhv = np.zeros_like(self.bh)
 
         # Setup Activation Function
-        self.activation, self.activationPrime = activations.get(activation)
+        self.activation, self.activationPrime = activations(activation)
 
     def forward(self, X):
         self.X = X

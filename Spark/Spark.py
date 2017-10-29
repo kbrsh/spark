@@ -1,34 +1,28 @@
 import numpy as np
-from . import losses
+from .losses import losses
 
 class Spark(object):
-    def __init__(self):
-        # Layers
-        self.layers = []
-
-        # Loss
-        self.loss = None
-        self.lossPrime = None
-
-    def add(self, layer):
-        self.layers.append(layer)
-
-    def train(self, X, y):
+    def __init__(self, inputs, outputs, learningRate=1e-2, loss="meanSquared", layers=[]):
         # Inputs
-        self.X = X
+        self.X = inputs
 
         # Outputs
-        self.y = y
+        self.y = outputs
 
-    def build(self, learningRate=1e-2, loss="meanSquared"):
-        self.loss, self.lossPrime = losses.get(loss)
+        # Learning Rate
         self.learningRate = learningRate
+
+        # Loss
+        self.loss, self.lossPrime = losses(loss)
+
+        # Layers
+        self.layers = layers
 
     def run(self, epochs=10):
         inputs = self.X
         outputs = self.y
 
-        for epoch in xrange(epochs):
+        for epoch in range(epochs):
             lastInput = inputs
             y = outputs
 
@@ -55,7 +49,7 @@ class Spark(object):
 
 
             print("Epoch: " + str(epoch))
-            print("Loss: " + self.loss(lastInput, y))
+            print("Loss: " + str(self.loss(lastInput, y)))
             print()
 
     def predict(self, y):

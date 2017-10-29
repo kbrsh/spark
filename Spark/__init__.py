@@ -1,2 +1,1 @@
-from .layers import Dense, Activation
-from . import Spark
+from .Spark import Spark

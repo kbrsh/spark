@@ -17,8 +17,8 @@ def crossEntropyPrime(o, y):
     return do
 
 # Global Loss Dictionary
-losses = globals()
+allLosses = globals()
 
 # Get Loss Function
-def get(name):
-    return losses[name], losses[name + 'Prime']
+def losses(name):
+    return allLosses[name], allLosses[name + "Prime"]

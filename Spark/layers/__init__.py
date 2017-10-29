@@ -1,2 +1,2 @@
-from . import Dense
-from . import Activation
+from .Dense import Dense
+from .Activation import Activation

@@ -30,11 +30,11 @@ def softmaxPrime(x):
     return x / x.shape[0]
 
 # Global Activations Dictionary
-activations = globals()
+allActivations = globals()
 
 # Get Activation Function
-def get(name):
+def activations(name):
     if name is None:
         return linear, linearPrime
     else:
-        return activations[name], activations[name + 'Prime']
+        return allActivations[name], allActivations[name + "Prime"]
