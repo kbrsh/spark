@@ -146,11 +146,10 @@ class Variable(Operation):
 
     def gradient(self, respect):
         node = self.node
-        shape = str(node.value.shape)
         if respect == node:
-            return "sp.ones(" + shape + ")"
+            return "sp.ones(" + node.name + ".shape)"
         else:
-            return "sp.zeros(" + shape + ")"
+            return "sp.zeros(" + node.name + ".shape)"
 
 class AddConstant(Operation):
     def __init__(self, node, inputs):

@@ -5,7 +5,7 @@ def Linear(x):
     return x
 
 def LinearPrime(x):
-    return 1
+    return np.ones(x.shape)
 
 # Sigmoid Activations
 def Sigmoid(x):

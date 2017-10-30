@@ -3,7 +3,7 @@ from .losses import Losses
 from .optimizers import Optimizers
 
 class Spark(object):
-    def __init__(self, inputs, outputs, learningRate=1e-2, loss="Mean Squared", optimizer="Vanilla", layers=[]):
+    def __init__(self, inputs, outputs, learningRate=0.01, loss="Mean Squared", optimizer="Vanilla", layers=[]):
         # Inputs
         self.X = inputs
 
@@ -27,7 +27,6 @@ class Spark(object):
         outputShape = outputs.shape
         loss = self.loss
         layers = self.layers
-        reversedLayers = reversed(layers)
 
         for epoch in range(epochs):
             lastInput = inputs
@@ -39,7 +38,7 @@ class Spark(object):
             # Backward Propagate Layers
             gradient = np.ones(outputShape)
 
-            for layer in reversedLayers:
+            for layer in reversed(layers):
                 gradient = layer.backward(gradient)
 
             print("Epoch: " + str(epoch))

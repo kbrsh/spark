@@ -22,9 +22,21 @@ class Dense(Layer):
         self.o = self.activation(np.dot(X, self.W) + self.b)
         return self.o
 
-    def backward(self, dO):
+    def backward(self, gradient):
         X = self.X
+        XShape = X.shape
+
         W = self.W
-        gradient = np.multiply(np.multiply(dO, self.activationPrime(self.o)), np.add(np.dot(X, np.ones(W.shape)), np.dot(np.zeros(X.shape), W)))
-        self.W = self.optimizer.optimize(W, gradient)
-        return gradient
+        WShape = W.shape
+
+        b = self.b
+
+        dO = np.multiply(gradient, self.activationPrime(self.o))
+        dW = np.add(np.dot(X, np.ones(WShape)), np.dot(np.zeros(XShape), W))
+        dB = np.add(dW, np.ones(b.shape))
+
+        optimizer = self.optimizer
+        self.W = optimizer.optimize(W, np.multiply(dO, dW))
+        self.b = optimizer.optimize(b, np.multiply(dO, dB))
+
+        return np.add(np.dot(X, np.zeros(WShape)), np.dot(np.ones(XShape), W))
