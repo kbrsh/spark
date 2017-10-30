@@ -1,3 +1,4 @@
+import numbers
 import numpy as np
 
 outputVariableCount = 0
@@ -6,8 +7,14 @@ def outputVariable():
     outputVariableCount += 1
     return "o" + str(outputVariableCount)
 
-def ADGradientArray(arr):
-    return "sp.array(" + np.array2string(arr, separator=", ") + ")"
+def isNumber(num):
+    return isinstance(num, numbers.Real)
+
+def ADGradientConstant(constant):
+    if isNumber(constant):
+        return constant
+    else:
+        return "sp.array(" + np.array2string(arr, separator=", ") + ")"
 
 def ADGradientOperation(op, a, b):
     if len(a) > 9 and a[0:8] == "sp.zeros":
@@ -147,9 +154,15 @@ class Variable(Operation):
     def gradient(self, respect):
         node = self.node
         if respect == node:
-            return "sp.ones(" + node.name + ".shape)"
+            if isNumber(node.value):
+                return "1"
+            else:
+                return "sp.ones(" + node.name + ".shape)"
         else:
-            return "sp.zeros(" + node.name + ".shape)"
+            if isNumber(node.value):
+                return "0"
+            else:
+                return "sp.zeros(" + node.name + ".shape)"
 
 class AddConstant(Operation):
     def __init__(self, node, inputs):
@@ -212,7 +225,7 @@ class MultiplyConstant(Operation):
 
     def gradient(self, respect):
         inputs = self.inputs
-        return ADGradientOperation("multiply", inputs[0].operation.gradient(respect), ADGradientArray(inputs[1]))
+        return ADGradientOperation("multiply", inputs[0].operation.gradient(respect), ADGradientConstant(inputs[1]))
 
 class MultiplyNode(Operation):
     def __init__(self, node, inputs):
@@ -241,7 +254,7 @@ class DotConstant(Operation):
 
     def gradient(self, respect):
         inputs = self.inputs
-        return ADGradientOperation("dot", inputs[0].operation.gradient(respect), ADGradientArray(inputs[1]))
+        return ADGradientOperation("dot", inputs[0].operation.gradient(respect), ADGradientConstant(inputs[1]))
 
 class DotNode(Operation):
     def __init__(self, node, inputs):
