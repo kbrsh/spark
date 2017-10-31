@@ -24,8 +24,8 @@ class Spark(object):
     def run(self, epochs=10):
         inputs = self.X
         outputs = self.y
-        outputShape = outputs.shape
         loss = self.loss
+        lossPrime = self.lossPrime
         layers = self.layers
 
         for epoch in range(epochs):
@@ -36,10 +36,10 @@ class Spark(object):
                 lastInput = layer.forward(lastInput)
 
             # Backward Propagate Layers
-            gradient = np.ones(outputShape)
+            gradient = lossPrime(lastInput, outputs)
 
             for layer in reversed(layers):
-                gradient = layer.backward(gradient)
+                gradient = layer.backward(gradient, loss, outputs)
 
             print("Epoch: " + str(epoch))
             print("Loss: " + str(loss(lastInput, outputs)))
